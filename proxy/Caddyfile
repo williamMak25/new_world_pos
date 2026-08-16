@@ -1,0 +1,34 @@
+{
+	auto_https off
+}
+
+# Plain HTTP: serve the local CA cert (needed to trust HTTPS below on a
+# phone before it trusts anything), redirect everything else to HTTPS.
+:80 {
+	handle /rootCA.pem {
+		root * /certs
+		file_server
+	}
+	handle {
+		redir https://{host}{uri}
+	}
+}
+
+# HTTPS via the mkcert-issued cert, one origin for both frontend and API
+# so the browser never has to deal with cross-origin requests/cookies.
+:443 {
+	tls /certs/dev-cert.pem /certs/dev-key.pem
+
+	handle /api/* {
+		reverse_proxy backend:8000
+	}
+	handle /health {
+		reverse_proxy backend:8000
+	}
+	handle /schema* {
+		reverse_proxy backend:8000
+	}
+	handle {
+		reverse_proxy frontend:3000
+	}
+}

@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(command -v docker compose)",
+      "Bash(docker compose *)",
+      "Bash(sudo -n ss -ltnp)",
+      "Bash(curl -sf -o /dev/null -w \"frontend: %{http_code}\\\\n\" http://localhost:3000)",
+      "Bash(curl -sf -o /dev/null -w \"backend: %{http_code}\\\\n\" http://localhost:8000/schema)"
+    ]
+  }
+}

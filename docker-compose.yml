@@ -1,0 +1,82 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports:
+      - "5432:5432"
+    volumes:
+      - pos_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build: ./backend
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      SECRET_KEY: change-me-to-a-random-secret-in-production
+      DATABASE_URL: postgresql+psycopg://app:app@db:5432/app
+      SAQ_REDIS_URL: redis://redis:6379/0
+      ALLOWED_CORS_ORIGINS: '["http://localhost:3000", "https://localhost", "https://192.168.1.113", "https://172.20.10.3"]'
+      LITESTAR_DEBUG: "true"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/src/py:/app/src/py
+      - ./backend/tools:/app/tools
+    command: sh -c "uv run app database upgrade --no-prompt && uv run app users create-roles && uv run app run --host 0.0.0.0 --port 8000 --reload"
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    depends_on:
+      - backend
+    environment:
+      # Empty on purpose: requests go to the same origin the page was loaded
+      # from (see proxy below), so this works whether you're on localhost or
+      # hitting the LAN IP from a phone.
+      NEXT_PUBLIC_API_URL: ""
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    command: npm run dev -- -H 0.0.0.0
+
+  # Local HTTPS reverse proxy so a phone on the same WiFi can use its camera
+  # (browsers only allow camera access on https:// or localhost). Serves
+  # frontend + backend on one origin, on port 443, with a mkcert-issued cert.
+  # See proxy/README.md for how to trust it on a phone.
+  proxy:
+    image: caddy:2-alpine
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./proxy/certs:/certs:ro
+
+volumes:
+  pos_db_data:
