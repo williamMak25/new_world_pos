@@ -12,7 +12,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db import models as m
 from app.domain.pos.guards import requires_store_access, requires_store_manager
-from app.domain.pos.schemas import Inventory, InventoryAdjust, InventorySet
+from app.domain.pos.schemas import Inventory, InventoryAdjust, InventoryAdjustmentRecord, InventorySet
 from app.domain.pos.services import InventoryService
 from app.lib.deps import create_service_dependencies
 
@@ -99,6 +99,7 @@ class InventoryController(Controller):
     async def set_inventory(
         self,
         inventory_service: InventoryService,
+        current_user: m.User,
         store_id: Annotated[UUID, Parameter(title="Store ID")],
         product_id: Annotated[UUID, Parameter(title="Product ID")],
         data: InventorySet,
@@ -113,6 +114,9 @@ class InventoryController(Controller):
             product_id=product_id,
             quantity=data.quantity,
             low_stock_threshold=data.low_stock_threshold,
+            reason=data.reason,
+            user_id=current_user.id,
+            user_label=current_user.name or current_user.email,
         )
         await inventory_service.repository.session.refresh(record, ["product"])
         return _to_inventory_schema(record)
@@ -125,6 +129,7 @@ class InventoryController(Controller):
     async def adjust_inventory(
         self,
         inventory_service: InventoryService,
+        current_user: m.User,
         store_id: Annotated[UUID, Parameter(title="Store ID")],
         product_id: Annotated[UUID, Parameter(title="Product ID")],
         data: InventoryAdjust,
@@ -134,6 +139,48 @@ class InventoryController(Controller):
         Returns:
             The updated inventory record.
         """
-        record = await inventory_service.adjust_quantity(store_id=store_id, product_id=product_id, delta=data.delta)
+        record = await inventory_service.adjust_quantity(
+            store_id=store_id,
+            product_id=product_id,
+            delta=data.delta,
+            reason=data.reason,
+            user_id=current_user.id,
+            user_label=current_user.name or current_user.email,
+        )
         await inventory_service.repository.session.refresh(record, ["product"])
         return _to_inventory_schema(record)
+
+    @get(
+        operation_id="ListInventoryAdjustments",
+        path="/api/stores/{store_id:uuid}/inventory/adjustments",
+        guards=[requires_store_manager],
+    )
+    async def list_inventory_adjustments(
+        self,
+        inventory_service: InventoryService,
+        store_id: Annotated[UUID, Parameter(title="Store ID")],
+        product_id: Annotated[UUID | None, Parameter(title="Filter to one product", query="productId")] = None,
+        limit: Annotated[int, Parameter(title="Max rows to return", ge=1, le=200)] = 50,
+    ) -> list[InventoryAdjustmentRecord]:
+        """List recent stock adjustments for a store, newest first.
+
+        Who changed what and why is internal operational data, so this is
+        restricted to ADMIN/MANAGER like the write endpoints above.
+
+        Returns:
+            Recent adjustment records, optionally scoped to one product.
+        """
+        records = await inventory_service.list_adjustments(store_id=store_id, product_id=product_id, limit=limit)
+        return [
+            InventoryAdjustmentRecord(
+                id=r.id,
+                product_id=r.product_id,
+                product_name=r.product_name,
+                user_label=r.user_label,
+                delta=r.delta,
+                quantity_after=r.quantity_after,
+                reason=r.reason,
+                created_at=r.created_at,
+            )
+            for r in records
+        ]

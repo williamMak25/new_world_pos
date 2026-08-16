@@ -215,22 +215,32 @@ export default function SalesPage() {
                   <span>{money(selected.total, currency)}</span>
                 </div>
               </div>
-              {canManage && selected.status === "COMPLETED" && (
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => void voidSale(selected.id)}
-                    className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                  >
-                    Void
-                  </button>
-                  <button
-                    onClick={() => void refundSale(selected.id)}
-                    className="flex-1 rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
-                  >
-                    Refund
-                  </button>
-                </div>
-              )}
+              <div className="flex gap-2 pt-2">
+                <a
+                  href={`/receipt/${selected.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-center text-xs font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Print
+                </a>
+                {canManage && selected.status === "COMPLETED" && (
+                  <>
+                    <button
+                      onClick={() => void voidSale(selected.id)}
+                      className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                    >
+                      Void
+                    </button>
+                    <button
+                      onClick={() => void refundSale(selected.id)}
+                      className="flex-1 rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
+                    >
+                      Refund
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
           )}
         </div>

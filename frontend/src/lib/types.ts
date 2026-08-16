@@ -72,6 +72,17 @@ export interface InventoryRecord {
   lowStockThreshold: number;
 }
 
+export interface InventoryAdjustmentRecord {
+  id: string;
+  productId: string | null;
+  productName: string;
+  userLabel: string | null;
+  delta: number;
+  quantityAfter: number;
+  reason: string;
+  createdAt: string;
+}
+
 export interface Customer {
   id: string;
   teamId: string;
@@ -152,6 +163,7 @@ export interface SalesSummary {
   grossProfit: string;
   breakdownGranularity: "day" | "week" | "month";
   breakdown: SalesBreakdownRow[];
+  capitalInStock: string;
 }
 
 export interface StoreDashboard {

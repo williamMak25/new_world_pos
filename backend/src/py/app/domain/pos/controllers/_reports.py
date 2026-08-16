@@ -83,6 +83,7 @@ class ReportController(Controller):
     async def get_sales_summary(
         self,
         sales_service: SaleService,
+        inventory_service: InventoryService,
         store_id: Annotated[UUID, Parameter(title="Store ID")],
         days: Annotated[int, Parameter(title="Number of trailing days to summarize", ge=1, le=365)] = 7,
     ) -> SalesSummary:
@@ -93,7 +94,8 @@ class ReportController(Controller):
         which any store role can view).
 
         Returns:
-            Aggregate sales, cost, and profit totals for the requested period.
+            Aggregate sales, cost, and profit totals for the requested period,
+            plus the current cost basis of unsold stock on hand.
         """
         end = datetime.now(UTC)
         start = end - timedelta(days=days)
@@ -102,11 +104,13 @@ class ReportController(Controller):
         breakdown = await sales_service.sales_breakdown(
             store_id=store_id, start=start, end=end, granularity=granularity
         )
+        capital_in_stock = await inventory_service.inventory_value(store_id=store_id)
         return SalesSummary(
             store_id=store_id,
             period_start=start.isoformat(),
             period_end=end.isoformat(),
             breakdown_granularity=granularity,
             breakdown=[SalesBreakdownRow(**row) for row in breakdown],  # type: ignore[arg-type]
+            capital_in_stock=capital_in_stock,
             **summary,  # type: ignore[arg-type]
         )

@@ -2,7 +2,7 @@
 
 from app.domain.pos.schemas._category import Category, CategoryCreate, CategoryUpdate
 from app.domain.pos.schemas._customer import Customer, CustomerCreate, CustomerUpdate
-from app.domain.pos.schemas._inventory import Inventory, InventoryAdjust, InventorySet
+from app.domain.pos.schemas._inventory import Inventory, InventoryAdjust, InventoryAdjustmentRecord, InventorySet
 from app.domain.pos.schemas._product import Product, ProductCreate, ProductUpdate
 from app.domain.pos.schemas._report import LowStockItem, SalesBreakdownRow, SalesSummary, StoreDashboard, TopProduct
 from app.domain.pos.schemas._sale import (
@@ -29,6 +29,7 @@ __all__ = (
     "CustomerUpdate",
     "Inventory",
     "InventoryAdjust",
+    "InventoryAdjustmentRecord",
     "InventorySet",
     "LowStockItem",
     "Payment",

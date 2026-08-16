@@ -27,6 +27,9 @@ class SalesSummary(CamelizedBaseStruct):
     gross_profit: Decimal
     breakdown_granularity: str
     breakdown: list[SalesBreakdownRow] = []
+    # Cost of unsold stock on hand right now — a current snapshot, independent
+    # of period_start/period_end (there's no history of past stock levels).
+    capital_in_stock: Decimal = Decimal(0)
 
 
 class TopProduct(CamelizedBaseStruct):

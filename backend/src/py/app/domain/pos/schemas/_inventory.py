@@ -1,5 +1,6 @@
 """Inventory schemas."""
 
+from datetime import datetime
 from uuid import UUID
 
 from app.lib.schema import CamelizedBaseStruct
@@ -20,6 +21,7 @@ class InventorySet(CamelizedBaseStruct):
 
     quantity: int
     low_stock_threshold: int | None = None
+    reason: str | None = None
 
 
 class InventoryAdjust(CamelizedBaseStruct):
@@ -27,3 +29,16 @@ class InventoryAdjust(CamelizedBaseStruct):
 
     delta: int
     reason: str | None = None
+
+
+class InventoryAdjustmentRecord(CamelizedBaseStruct):
+    """An entry in a store's stock adjustment history."""
+
+    id: UUID
+    product_id: UUID | None
+    product_name: str
+    user_label: str | None
+    delta: int
+    quantity_after: int
+    reason: str
+    created_at: datetime

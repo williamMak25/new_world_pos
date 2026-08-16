@@ -3,6 +3,7 @@ from app.db.models._category import Category
 from app.db.models._customer import Customer
 from app.db.models._email_verification_token import EmailVerificationToken
 from app.db.models._inventory import Inventory
+from app.db.models._inventory_adjustment import InventoryAdjustment
 from app.db.models._oauth_account import UserOAuthAccount
 from app.db.models._password_reset_token import PasswordResetToken
 from app.db.models._payment import Payment
@@ -28,6 +29,7 @@ __all__ = (
     "Customer",
     "EmailVerificationToken",
     "Inventory",
+    "InventoryAdjustment",
     "PasswordResetToken",
     "Payment",
     "PaymentMethod",

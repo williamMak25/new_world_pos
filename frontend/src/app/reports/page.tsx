@@ -82,8 +82,17 @@ export default function ReportsPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatCard label="Total Sell" value={String(data.saleCount)} />
             <StatCard label="Total Revenue" value={money(data.netSales, currency)} />
-            <StatCard label="Total Capital" value={money(data.totalCost, currency)} />
+            <StatCard label="Total Capital (sold)" value={money(data.totalCost, currency)} />
             <StatCard label="Gross Profit" value={money(data.grossProfit, currency)} />
+          </div>
+
+          {/* Separate from the period grid above: this is stock on hand right
+              now, not affected by the period selector — there's no history
+              of past inventory levels to compute it for a prior date. */}
+          <div className="max-w-xs rounded-lg border border-gray-200 bg-white p-4">
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Capital in Stock (current)</p>
+            <p className="mt-1 text-2xl font-semibold text-gray-900">{money(data.capitalInStock, currency)}</p>
+            <p className="mt-1 text-xs text-gray-400">Cost of unsold inventory on hand, as of now</p>
           </div>
 
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
