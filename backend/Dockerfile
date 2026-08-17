@@ -24,4 +24,5 @@ RUN uv sync --no-dev
 
 EXPOSE 8000
 
-CMD ["uv", "run", "app", "run", "--host", "0.0.0.0", "--port", "8000"]
+# Shell-form CMD (no brackets) runs via /bin/sh -c automatically, so && works.
+CMD uv run app database upgrade --no-prompt && uv run app users create-roles && uv run app run --host 0.0.0.0 --port 8000
