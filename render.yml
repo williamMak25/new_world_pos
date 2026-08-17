@@ -1,0 +1,40 @@
+services:
+  - type: web
+    name: pos-backend
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    # Runs pending migrations and ensures default roles exist before the API
+    # starts, same as the `command:` override in docker-compose.yml. Free
+    # Render instances don't support preDeployCommand, so this runs inline
+    # on every boot instead (safe: migrations are idempotent).
+    dockerCommand: >-
+      sh -c "uv run app database upgrade --no-prompt && uv run app users create-roles && uv run app run --host 0.0.0.0 --port 8000"
+    healthCheckPath: /health
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: LITESTAR_HOST
+        value: 0.0.0.0
+      - key: LITESTAR_PORT
+        value: 8000
+      - key: LITESTAR_DEBUG
+        value: "false"
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: SECRET_KEY
+        generateValue: true
+      # Neon Postgres connection string, e.g.
+      # postgresql+psycopg://user:pass@ep-xxxx.neon.tech/dbname?sslmode=require
+      - key: DATABASE_URL
+        sync: false
+      # Upstash Redis connection string (use the TLS "rediss://" URL), e.g.
+      # rediss://default:xxxx@xxxx.upstash.io:6379
+      - key: SAQ_REDIS_URL
+        sync: false
+      # Exact origin(s) of your deployed Vercel frontend, e.g.
+      # ["https://your-app.vercel.app"]
+      - key: ALLOWED_CORS_ORIGINS
+        sync: false

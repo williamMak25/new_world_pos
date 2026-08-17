@@ -109,3 +109,10 @@ why `ALLOWED_CORS_ORIGINS` must list the frontend's exact origin rather than
   template's team invitation endpoints under `/api/teams/{team_id}/members`
   and `/api/teams/{team_id}/invitations` — the frontend doesn't have a
   screen for this yet, so use the API directly or add one.
+
+### Option C: Deploy for free, without a credit card
+
+See [`DEPLOY.md`](./DEPLOY.md) for step-by-step instructions using Neon
+(Postgres), Upstash (Redis), Render (backend), and Vercel (frontend) — all
+free tiers that don't require a card. `render.yaml` in this repo is a Render
+Blueprint for the backend.
