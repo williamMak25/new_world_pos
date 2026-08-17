@@ -6,6 +6,7 @@ import { BarcodeScanner } from "@/components/BarcodeScanner";
 import { api, ApiError } from "@/lib/api";
 import { currentRole, useAuth } from "@/lib/auth-context";
 import type { Category, Paginated, Product } from "@/lib/types";
+import { Badge, Button, Card, CardHeader, Input, Select, Table, TBody, TD, TEmpty, TH, THead, TR } from "@/components/ui";
 
 const emptyForm = { sku: "", name: "", price: "", cost: "0", categoryId: "", barcode: "", description: "" };
 
@@ -24,6 +25,7 @@ export default function ProductsPage() {
   const [newCategoryName, setNewCategoryName] = useState("");
   const [categorySubmitting, setCategorySubmitting] = useState(false);
   const [categoryError, setCategoryError] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   async function loadAll() {
     if (!teamId) return;
@@ -65,8 +67,13 @@ export default function ProductsPage() {
 
   async function deleteProduct(id: string) {
     if (!teamId || !confirm("Delete this product?")) return;
-    await api.delete(`/api/teams/${teamId}/products/${id}`);
-    await loadAll();
+    setDeletingId(id);
+    try {
+      await api.delete(`/api/teams/${teamId}/products/${id}`);
+      await loadAll();
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   async function addCategory() {
@@ -97,106 +104,68 @@ export default function ProductsPage() {
       <h1 className="mb-6 text-2xl font-semibold text-gray-900">Products</h1>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
-              <tr>
-                <th className="px-4 py-2">Name</th>
-                <th className="px-4 py-2">SKU</th>
-                <th className="px-4 py-2">Barcode</th>
-                <th className="px-4 py-2">Category</th>
-                <th className="px-4 py-2">Price</th>
-                {canManage && <th className="px-4 py-2" />}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+        <Card className="overflow-hidden lg:col-span-2">
+          <Table>
+            <THead>
+              <TH>Name</TH>
+              <TH>SKU</TH>
+              <TH>Barcode</TH>
+              <TH>Category</TH>
+              <TH>Price</TH>
+              {canManage && <TH />}
+            </THead>
+            <TBody>
               {products.map((p) => (
-                <tr key={p.id}>
-                  <td className="px-4 py-2 font-medium text-gray-800">
-                    {p.name}
-                  </td>
-                  <td className="px-4 py-2 text-gray-500">{p.sku}</td>
-                  <td className="px-4 py-2 text-gray-500">{p.barcode}</td>
-                  <td className="px-4 py-2 text-gray-500">
-                    {categoryName(p.categoryId)}
-                  </td>
-                  <td className="px-4 py-2 text-gray-700">
-                    ${Number(p.price).toFixed(2)}
-                  </td>
+                <TR key={p.id}>
+                  <TD className="font-medium text-gray-800">{p.name}</TD>
+                  <TD className="text-gray-500">{p.sku}</TD>
+                  <TD className="text-gray-500">{p.barcode}</TD>
+                  <TD>
+                    {p.categoryId ? <Badge tone="brand">{categoryName(p.categoryId)}</Badge> : <span className="text-gray-400">—</span>}
+                  </TD>
+                  <TD className="text-gray-700">${Number(p.price).toFixed(2)}</TD>
                   {canManage && (
-                    <td className="px-4 py-2 text-right">
-                      <button
+                    <TD align="right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        loading={deletingId === p.id}
+                        className="text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                         onClick={() => void deleteProduct(p.id)}
-                        className="text-xs font-medium text-red-600 hover:text-red-700"
                       >
                         Delete
-                      </button>
-                    </td>
+                      </Button>
+                    </TD>
                   )}
-                </tr>
+                </TR>
               ))}
-              {products.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={5}
-                    className="px-4 py-6 text-center text-sm text-gray-500"
-                  >
-                    No products yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              {products.length === 0 && <TEmpty colSpan={6}>No products yet.</TEmpty>}
+            </TBody>
+          </Table>
+        </Card>
 
         {canManage && (
-          <div className="rounded-lg border border-gray-200 bg-white p-4">
-            <h2 className="mb-3 text-sm font-semibold text-gray-900">
-              Add product
-            </h2>
-            <form onSubmit={createProduct} className="space-y-3">
-              <Field label="Name">
-                <input
-                  required
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="SKU">
-                <input
-                  required
-                  value={form.sku}
-                  onChange={(e) => setForm({ ...form, sku: e.target.value })}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Barcode (optional)">
+          <Card className="h-fit">
+            <CardHeader title="Add product" />
+            <form onSubmit={createProduct} className="space-y-3 p-4">
+              <Input label="Name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <Input label="SKU" required value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })} />
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">Barcode (optional)</label>
                 <div className="flex gap-2">
-                  <input
-                    value={form.barcode}
-                    onChange={(e) =>
-                      setForm({ ...form, barcode: e.target.value })
-                    }
-                    className={inputClass}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setScanning(true)}
-                    className="shrink-0 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-                  >
+                  <Input value={form.barcode} onChange={(e) => setForm({ ...form, barcode: e.target.value })} />
+                  <Button type="button" variant="outline" onClick={() => setScanning(true)} className="shrink-0">
                     Scan
-                  </button>
+                  </Button>
                 </div>
-              </Field>
-              <Field label="Category">
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-gray-600">Category</label>
                 <div className="flex gap-2">
-                  <select
+                  <Select
+                    className="flex-1"
                     value={form.categoryId}
-                    onChange={(e) =>
-                      setForm({ ...form, categoryId: e.target.value })
-                    }
-                    className={inputClass}
+                    onChange={(e) => setForm({ ...form, categoryId: e.target.value })}
                   >
                     <option value="">None</option>
                     {categories.map((c) => (
@@ -204,21 +173,22 @@ export default function ProductsPage() {
                         {c.name}
                       </option>
                     ))}
-                  </select>
-                  <button
+                  </Select>
+                  <Button
                     type="button"
+                    variant="outline"
+                    className="shrink-0"
                     onClick={() => {
                       setCategoryError(null);
                       setAddingCategory((v) => !v);
                     }}
-                    className="shrink-0 rounded-md border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                   >
                     {addingCategory ? "Cancel" : "+ New"}
-                  </button>
+                  </Button>
                 </div>
                 {addingCategory && (
                   <div className="mt-2 flex gap-2">
-                    <input
+                    <Input
                       autoFocus
                       value={newCategoryName}
                       onChange={(e) => setNewCategoryName(e.target.value)}
@@ -229,51 +199,43 @@ export default function ProductsPage() {
                         }
                       }}
                       placeholder="New category name"
-                      className={inputClass}
                     />
-                    <button
+                    <Button
                       type="button"
+                      className="shrink-0"
+                      loading={categorySubmitting}
+                      disabled={!newCategoryName.trim()}
                       onClick={() => void addCategory()}
-                      disabled={categorySubmitting || !newCategoryName.trim()}
-                      className="shrink-0 rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
                     >
                       {categorySubmitting ? "Adding…" : "Add"}
-                    </button>
+                    </Button>
                   </div>
                 )}
-                {categoryError && <p className="mt-1 text-xs text-red-600">{categoryError}</p>}
-              </Field>
-              <Field label="Price">
-                <input
-                  required
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={form.price}
-                  onChange={(e) => setForm({ ...form, price: e.target.value })}
-                  className={inputClass}
-                />
-              </Field>
-              <Field label="Cost (optional)">
-                <input
-                  type="number"
-                  min={0}
-                  step="0.01"
-                  value={form.cost}
-                  onChange={(e) => setForm({ ...form, cost: e.target.value })}
-                  className={inputClass}
-                />
-              </Field>
-              {error && <p className="text-sm text-red-600">{error}</p>}
-              <button
-                type="submit"
-                disabled={submitting}
-                className="w-full rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
-              >
+                {categoryError && <p className="mt-1 text-xs text-rose-600">{categoryError}</p>}
+              </div>
+              <Input
+                label="Price"
+                required
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.price}
+                onChange={(e) => setForm({ ...form, price: e.target.value })}
+              />
+              <Input
+                label="Cost (optional)"
+                type="number"
+                min={0}
+                step="0.01"
+                value={form.cost}
+                onChange={(e) => setForm({ ...form, cost: e.target.value })}
+              />
+              {error && <p className="text-sm text-rose-600">{error}</p>}
+              <Button type="submit" fullWidth loading={submitting}>
                 {submitting ? "Adding…" : "Add product"}
-              </button>
+              </Button>
             </form>
-          </div>
+          </Card>
         )}
       </div>
 
@@ -287,16 +249,5 @@ export default function ProductsPage() {
         />
       )}
     </AppShell>
-  );
-}
-
-const inputClass = "w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500";
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="mb-1 block text-xs font-medium text-gray-500">{label}</label>
-      {children}
-    </div>
   );
 }

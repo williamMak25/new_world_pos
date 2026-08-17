@@ -5,16 +5,17 @@ import { AppShell } from "@/components/AppShell";
 import { api, ApiError } from "@/lib/api";
 import { currentRole, useAuth } from "@/lib/auth-context";
 import type { Paginated, Sale } from "@/lib/types";
+import { Badge, Button, Card, CardHeader, SearchInput, Select, Table, TBody, TD, TEmpty, TH, THead, TR } from "@/components/ui";
 
 function money(value: string, currency = "USD") {
   const n = Number(value);
   return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(Number.isFinite(n) ? n : 0);
 }
 
-const STATUS_STYLES: Record<Sale["status"], string> = {
-  COMPLETED: "bg-green-100 text-green-700",
-  REFUNDED: "bg-amber-100 text-amber-700",
-  VOIDED: "bg-gray-200 text-gray-600",
+const STATUS_TONE: Record<Sale["status"], "success" | "warning" | "default"> = {
+  COMPLETED: "success",
+  REFUNDED: "warning",
+  VOIDED: "default",
 };
 
 type Period = "all" | "today" | "week" | "month";
@@ -109,77 +110,62 @@ export default function SalesPage() {
       <h1 className="mb-6 text-2xl font-semibold text-gray-900">Sales</h1>
 
       <div className="mb-4 flex flex-wrap gap-2">
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value as Period)}
-          className="rounded-md border border-gray-300 px-2 py-1 text-sm"
-        >
+        <Select value={period} onChange={(e) => setPeriod(e.target.value as Period)} className="w-auto min-w-[8.5rem]">
           <option value="all">All time</option>
           <option value="today">Today</option>
           <option value="week">This week</option>
           <option value="month">This month</option>
-        </select>
-        <select value={status} onChange={(e) => setStatus(e.target.value)} className="rounded-md border border-gray-300 px-2 py-1 text-sm">
+        </Select>
+        <Select value={status} onChange={(e) => setStatus(e.target.value)} className="w-auto min-w-[9rem]">
           <option value="">All statuses</option>
           <option value="COMPLETED">Completed</option>
           <option value="VOIDED">Voided</option>
           <option value="REFUNDED">Refunded</option>
-        </select>
-        <select
-          value={paymentMethod}
-          onChange={(e) => setPaymentMethod(e.target.value)}
-          className="rounded-md border border-gray-300 px-2 py-1 text-sm"
-        >
+        </Select>
+        <Select value={paymentMethod} onChange={(e) => setPaymentMethod(e.target.value)} className="w-auto min-w-[10rem]">
           <option value="">All payment methods</option>
           <option value="CASH">Cash</option>
           <option value="CARD">Card</option>
           <option value="MOBILE">Mobile</option>
           <option value="OTHER">Other</option>
-        </select>
-        <input
+        </Select>
+        <SearchInput
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          onClear={() => setSearch("")}
           placeholder="Search sale #…"
-          className="rounded-md border border-gray-300 px-3 py-1 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+          className="w-48"
         />
       </div>
 
       {error && <p className="mb-3 text-sm text-red-600">{error}</p>}
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
-              <tr>
-                <th className="px-4 py-2">Sale #</th>
-                <th className="px-4 py-2">Date</th>
-                <th className="px-4 py-2">Total</th>
-                <th className="px-4 py-2">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+        <Card className="overflow-hidden lg:col-span-2">
+          <Table>
+            <THead>
+              <TH>Sale #</TH>
+              <TH>Date</TH>
+              <TH>Total</TH>
+              <TH>Status</TH>
+            </THead>
+            <TBody>
               {sales.map((s) => (
-                <tr key={s.id} onClick={() => setSelected(s)} className="cursor-pointer hover:bg-gray-50">
-                  <td className="px-4 py-2 font-medium text-gray-800">{s.saleNumber}</td>
-                  <td className="px-4 py-2 text-gray-500">{new Date(s.createdAt).toLocaleString()}</td>
-                  <td className="px-4 py-2 text-gray-700">{money(s.total, currency)}</td>
-                  <td className="px-4 py-2">
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_STYLES[s.status]}`}>{s.status}</span>
-                  </td>
-                </tr>
+                <TR key={s.id} onClick={() => setSelected(s)}>
+                  <TD className="font-medium text-gray-800">{s.saleNumber}</TD>
+                  <TD className="text-gray-500">{new Date(s.createdAt).toLocaleString()}</TD>
+                  <TD className="text-gray-700">{money(s.total, currency)}</TD>
+                  <TD>
+                    <Badge tone={STATUS_TONE[s.status]}>{s.status}</Badge>
+                  </TD>
+                </TR>
               ))}
-              {sales.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-500">
-                    No sales yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              {sales.length === 0 && <TEmpty colSpan={4}>No sales yet.</TEmpty>}
+            </TBody>
+          </Table>
+        </Card>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
+        <Card className="h-fit p-4">
           <h2 className="mb-3 text-sm font-semibold text-gray-900">Receipt</h2>
           {!selected ? (
             <p className="text-sm text-gray-500">Select a sale to view its receipt.</p>
@@ -220,30 +206,24 @@ export default function SalesPage() {
                   href={`/receipt/${selected.id}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-center text-xs font-medium text-gray-700 hover:bg-gray-50"
+                  className="flex-1 rounded-lg border border-gray-300 px-3 py-1.5 text-center text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50"
                 >
                   Print
                 </a>
                 {canManage && selected.status === "COMPLETED" && (
                   <>
-                    <button
-                      onClick={() => void voidSale(selected.id)}
-                      className="flex-1 rounded-md border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
-                    >
+                    <Button variant="outline" size="sm" fullWidth onClick={() => void voidSale(selected.id)}>
                       Void
-                    </button>
-                    <button
-                      onClick={() => void refundSale(selected.id)}
-                      className="flex-1 rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
-                    >
+                    </Button>
+                    <Button variant="danger" size="sm" fullWidth onClick={() => void refundSale(selected.id)}>
                       Refund
-                    </button>
+                    </Button>
                   </>
                 )}
               </div>
             </div>
           )}
-        </div>
+        </Card>
       </div>
     </AppShell>
   );

@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { SalesSummary } from "@/lib/types";
+import { Card, CardHeader, Select, StatCard, Table, TBody, TD, TEmpty, TH, THead, TR } from "@/components/ui";
 
 function money(value: string, currency = "USD") {
   const n = Number(value);
@@ -58,19 +59,15 @@ export default function ReportsPage() {
 
   return (
     <AppShell>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold text-gray-900">Reports</h1>
-        <select
-          value={days}
-          onChange={(e) => setDays(Number(e.target.value))}
-          className="rounded-md border border-gray-300 px-2 py-1 text-sm"
-        >
+        <Select value={days} onChange={(e) => setDays(Number(e.target.value))} className="w-auto min-w-[9rem]">
           {PERIODS.map((p) => (
             <option key={p.days} value={p.days}>
               {p.label}
             </option>
           ))}
-        </select>
+        </Select>
       </div>
 
       {!storeId && <p className="text-sm text-gray-500">Select a store to see its report.</p>}
@@ -80,68 +77,86 @@ export default function ReportsPage() {
       {data && (
         <div className="space-y-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard label="Total Sell" value={String(data.saleCount)} />
-            <StatCard label="Total Revenue" value={money(data.netSales, currency)} />
-            <StatCard label="Total Capital (sold)" value={money(data.totalCost, currency)} />
-            <StatCard label="Gross Profit" value={money(data.grossProfit, currency)} />
+            <StatCard
+              label="Total Sell"
+              value={String(data.saleCount)}
+              tone="brand"
+              icon={
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              }
+            />
+            <StatCard
+              label="Total Revenue"
+              value={money(data.netSales, currency)}
+              tone="success"
+              icon={
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V6m0 12v-2m0-10a9 9 0 100 18 9 9 0 000-18z" />
+                </svg>
+              }
+            />
+            <StatCard
+              label="Total Capital (sold)"
+              value={money(data.totalCost, currency)}
+              tone="purple"
+              icon={
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              }
+            />
+            <StatCard
+              label="Gross Profit"
+              value={money(data.grossProfit, currency)}
+              tone="warning"
+              icon={
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m-9 0h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+              }
+            />
           </div>
 
           {/* Separate from the period grid above: this is stock on hand right
               now, not affected by the period selector — there's no history
               of past inventory levels to compute it for a prior date. */}
-          <div className="max-w-xs rounded-lg border border-gray-200 bg-white p-4">
-            <p className="text-xs font-medium uppercase tracking-wide text-gray-500">Capital in Stock (current)</p>
-            <p className="mt-1 text-2xl font-semibold text-gray-900">{money(data.capitalInStock, currency)}</p>
-            <p className="mt-1 text-xs text-gray-400">Cost of unsold inventory on hand, as of now</p>
+          <div className="max-w-xs">
+            <StatCard
+              label="Capital in Stock (current)"
+              value={money(data.capitalInStock, currency)}
+              hint="Cost of unsold inventory on hand, as of now"
+              tone="brand"
+            />
           </div>
 
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-            <h2 className="border-b border-gray-200 px-4 py-3 text-sm font-semibold text-gray-900">
-              {GRANULARITY_LABEL[data.breakdownGranularity]} breakdown
-            </h2>
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
-                <tr>
-                  <th className="px-4 py-2">Period</th>
-                  <th className="px-4 py-2 text-right">Sell</th>
-                  <th className="px-4 py-2 text-right">Revenue</th>
-                  <th className="px-4 py-2 text-right">Capital</th>
-                  <th className="px-4 py-2 text-right">Profit</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
+          <Card className="overflow-hidden">
+            <CardHeader title={`${GRANULARITY_LABEL[data.breakdownGranularity]} breakdown`} />
+            <Table>
+              <THead>
+                <TH>Period</TH>
+                <TH align="right">Sell</TH>
+                <TH align="right">Revenue</TH>
+                <TH align="right">Capital</TH>
+                <TH align="right">Profit</TH>
+              </THead>
+              <TBody>
                 {data.breakdown.map((row) => (
-                  <tr key={row.periodStart}>
-                    <td className="px-4 py-2 font-medium text-gray-800">
-                      {formatPeriod(row.periodStart, data.breakdownGranularity)}
-                    </td>
-                    <td className="px-4 py-2 text-right text-gray-500">{row.saleCount}</td>
-                    <td className="px-4 py-2 text-right text-gray-700">{money(row.netSales, currency)}</td>
-                    <td className="px-4 py-2 text-right text-gray-700">{money(row.totalCost, currency)}</td>
-                    <td className="px-4 py-2 text-right font-medium text-gray-900">{money(row.grossProfit, currency)}</td>
-                  </tr>
+                  <TR key={row.periodStart}>
+                    <TD className="font-medium text-gray-800">{formatPeriod(row.periodStart, data.breakdownGranularity)}</TD>
+                    <TD align="right" className="text-gray-500">{row.saleCount}</TD>
+                    <TD align="right" className="text-gray-700">{money(row.netSales, currency)}</TD>
+                    <TD align="right" className="text-gray-700">{money(row.totalCost, currency)}</TD>
+                    <TD align="right" className="font-medium text-gray-900">{money(row.grossProfit, currency)}</TD>
+                  </TR>
                 ))}
-                {data.breakdown.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-6 text-center text-sm text-gray-500">
-                      No sales in this period.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                {data.breakdown.length === 0 && <TEmpty colSpan={5}>No sales in this period.</TEmpty>}
+              </TBody>
+            </Table>
+          </Card>
         </div>
       )}
     </AppShell>
-  );
-}
-
-function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-white p-4">
-      <p className="text-xs font-medium uppercase tracking-wide text-gray-500">{label}</p>
-      <p className="mt-1 text-2xl font-semibold text-gray-900">{value}</p>
-    </div>
   );
 }

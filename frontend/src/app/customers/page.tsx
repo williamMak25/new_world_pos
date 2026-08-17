@@ -5,6 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import { api, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
 import type { Customer, Paginated } from "@/lib/types";
+import { Button, Card, CardHeader, Input, Table, TBody, TD, TEmpty, TH, THead, TR } from "@/components/ui";
 
 const emptyForm = { name: "", email: "", phone: "" };
 
@@ -49,69 +50,45 @@ export default function CustomersPage() {
     <AppShell>
       <h1 className="mb-6 text-2xl font-semibold text-gray-900">Customers</h1>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="lg:col-span-2 overflow-hidden rounded-lg border border-gray-200 bg-white">
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 text-left text-xs font-medium uppercase text-gray-500">
-              <tr>
-                <th className="px-4 py-2">Name</th>
-                <th className="px-4 py-2">Email</th>
-                <th className="px-4 py-2">Phone</th>
-                <th className="px-4 py-2">Loyalty points</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
+        <Card className="overflow-hidden lg:col-span-2">
+          <Table>
+            <THead>
+              <TH>Name</TH>
+              <TH>Email</TH>
+              <TH>Phone</TH>
+              <TH>Loyalty points</TH>
+            </THead>
+            <TBody>
               {customers.map((c) => (
-                <tr key={c.id}>
-                  <td className="px-4 py-2 font-medium text-gray-800">{c.name}</td>
-                  <td className="px-4 py-2 text-gray-500">{c.email ?? "—"}</td>
-                  <td className="px-4 py-2 text-gray-500">{c.phone ?? "—"}</td>
-                  <td className="px-4 py-2 text-gray-700">{c.loyaltyPoints}</td>
-                </tr>
+                <TR key={c.id}>
+                  <TD className="font-medium text-gray-800">{c.name}</TD>
+                  <TD className="text-gray-500">{c.email ?? "—"}</TD>
+                  <TD className="text-gray-500">{c.phone ?? "—"}</TD>
+                  <TD className="text-gray-700">{c.loyaltyPoints}</TD>
+                </TR>
               ))}
-              {customers.length === 0 && (
-                <tr>
-                  <td colSpan={4} className="px-4 py-6 text-center text-sm text-gray-500">
-                    No customers yet.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              {customers.length === 0 && <TEmpty colSpan={4}>No customers yet.</TEmpty>}
+            </TBody>
+          </Table>
+        </Card>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-4">
-          <h2 className="mb-3 text-sm font-semibold text-gray-900">Add customer</h2>
-          <form onSubmit={createCustomer} className="space-y-3">
-            <input
-              required
-              placeholder="Name"
-              value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-            />
-            <input
+        <Card className="h-fit">
+          <CardHeader title="Add customer" />
+          <form onSubmit={createCustomer} className="space-y-3 p-4">
+            <Input required placeholder="Name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Input
               type="email"
               placeholder="Email (optional)"
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
             />
-            <input
-              placeholder="Phone (optional)"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm"
-            />
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <button
-              type="submit"
-              disabled={submitting}
-              className="w-full rounded-md bg-brand-600 px-3 py-2 text-sm font-medium text-white hover:bg-brand-700 disabled:opacity-60"
-            >
+            <Input placeholder="Phone (optional)" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+            {error && <p className="text-sm text-rose-600">{error}</p>}
+            <Button type="submit" fullWidth loading={submitting}>
               {submitting ? "Adding…" : "Add customer"}
-            </button>
+            </Button>
           </form>
-        </div>
+        </Card>
       </div>
     </AppShell>
   );
