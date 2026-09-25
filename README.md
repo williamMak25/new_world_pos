@@ -116,9 +116,3 @@ See [`DEPLOY.md`](./DEPLOY.md) for step-by-step instructions using Neon
 (Postgres), Upstash (Redis), Render (backend), and Vercel (frontend) — all
 free tiers that don't require a card. `render.yaml` in this repo is a Render
 Blueprint for the backend.
-
-## Telegram receipt bot
-
-Send receipts to a Telegram bot: text is read by Claude into a Google Sheet, and
-photos/files are saved to Google Drive, with a preview sent back in the chat.
-See [`TELEGRAM_BOT.md`](./TELEGRAM_BOT.md) for setup.
