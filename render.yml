@@ -38,3 +38,23 @@ services:
       # ["https://your-app.vercel.app"]
       - key: ALLOWED_CORS_ORIGINS
         sync: false
+      # --- Telegram receipt bot (optional; see TELEGRAM_BOT.md) ---
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_WEBHOOK_SECRET
+        generateValue: true
+      # Comma-separated chat ids allowed to use the bot, e.g. 12345,67890
+      - key: TELEGRAM_ALLOWED_CHAT_IDS
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: GOOGLE_API_CLIENT_ID
+        sync: false
+      - key: GOOGLE_API_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_API_REFRESH_TOKEN
+        sync: false
+      - key: GOOGLE_SHEET_ID
+        sync: false
+      - key: GOOGLE_DRIVE_FOLDER_ID
+        sync: false

@@ -53,10 +53,12 @@ class ApplicationCore(InitPluginProtocol, CLIPluginProtocol):
 
     def on_cli_init(self, cli: Group) -> None:
         from app.cli.commands import user_management_group
+        from app.domain.telegram.cli import telegram_group
 
         settings = get_settings()
         self.app_slug = settings.app.slug
         cli.add_command(user_management_group)
+        cli.add_command(telegram_group)
 
     def on_app_init(self, app_config: AppConfig) -> AppConfig:
         """Configure application for use with SQLAlchemy.

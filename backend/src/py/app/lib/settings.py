@@ -488,6 +488,37 @@ class LogSettings:
 
 
 @dataclass
+class TelegramBotSettings:
+    """Telegram receipt bot: Telegram -> Claude -> Google Sheets / Drive.
+
+    The bot is disabled until TELEGRAM_BOT_TOKEN is set.
+    """
+
+    BOT_TOKEN: str = field(default_factory=get_env("TELEGRAM_BOT_TOKEN", ""))
+    """Bot token from @BotFather."""
+    WEBHOOK_SECRET: str = field(default_factory=get_env("TELEGRAM_WEBHOOK_SECRET", ""))
+    """Secret Telegram echoes in the X-Telegram-Bot-Api-Secret-Token header."""
+    ALLOWED_CHAT_IDS: list[str] = field(default_factory=get_env("TELEGRAM_ALLOWED_CHAT_IDS", []))
+    """Chat ids allowed to use the bot (comma separated). Empty means nobody."""
+    AI_MODEL: str = field(default_factory=get_env("TELEGRAM_AI_MODEL", "claude-opus-5"))
+    """Claude model used to read text messages. Needs ANTHROPIC_API_KEY."""
+    GOOGLE_CLIENT_ID: str = field(default_factory=get_env("GOOGLE_API_CLIENT_ID", ""))
+    """OAuth client id (Desktop app type) used for Sheets/Drive."""
+    GOOGLE_CLIENT_SECRET: str = field(default_factory=get_env("GOOGLE_API_CLIENT_SECRET", ""))
+    """OAuth client secret used for Sheets/Drive."""
+    GOOGLE_REFRESH_TOKEN: str = field(default_factory=get_env("GOOGLE_API_REFRESH_TOKEN", ""))
+    """Refresh token from `app telegram google-auth`."""
+    GOOGLE_SHEET_ID: str = field(default_factory=get_env("GOOGLE_SHEET_ID", ""))
+    """Spreadsheet with `Receipts` and `Files` tabs."""
+    GOOGLE_DRIVE_FOLDER_ID: str = field(default_factory=get_env("GOOGLE_DRIVE_FOLDER_ID", ""))
+    """Drive folder photos and files are uploaded to."""
+
+    @property
+    def enabled(self) -> bool:
+        return bool(self.BOT_TOKEN)
+
+
+@dataclass
 class Settings:
     app: AppSettings = field(default_factory=AppSettings)
     db: DatabaseSettings = field(default_factory=DatabaseSettings)
@@ -495,6 +526,7 @@ class Settings:
     saq: SaqSettings = field(default_factory=SaqSettings)
     log: LogSettings = field(default_factory=LogSettings)
     email: EmailSettings = field(default_factory=EmailSettings)
+    telegram: TelegramBotSettings = field(default_factory=TelegramBotSettings)
 
     @classmethod
     @lru_cache(maxsize=1, typed=True)
@@ -512,10 +544,11 @@ class Settings:
             saq: SaqSettings = SaqSettings()
             app: AppSettings = AppSettings()
             log: LogSettings = LogSettings()
+            telegram: TelegramBotSettings = TelegramBotSettings()
         except Exception as e:  # noqa: BLE001
             logger.fatal("Could not load settings. %s", e)
             sys.exit(1)
-        return Settings(app=app, db=db, server=server, saq=saq, log=log)
+        return Settings(app=app, db=db, server=server, saq=saq, log=log, telegram=telegram)
 
 
 def get_settings(dotenv_filename: str = ".env") -> Settings:

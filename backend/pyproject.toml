@@ -26,6 +26,8 @@ dependencies = [
   "httpx-oauth",
   "pyotp>=2.9.0",
   "qrcode[pil]>=7.4.0",
+  "anthropic>=1.8.0",
+  "httpx>=0.28.1",
 ]
 description = "POS (point-of-sale) backend API, built on the Litestar fullstack template."
 keywords = ["litestar", "sqlalchemy", "alembic", "pos", "api", "asgi"]
